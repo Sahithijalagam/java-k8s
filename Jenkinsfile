@@ -9,7 +9,6 @@ properties([
 	])
 ])
 
-try {
 stage('Clone Repo'){
     node('master'){
       cleanWs()
@@ -85,5 +84,5 @@ stage('Clone Repo'){
 // catch (err){
 //   currentBuild.result = "FAILURE"
 //   throw err
-}
+// }
 
