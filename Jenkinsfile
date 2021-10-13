@@ -11,7 +11,7 @@ properties([
 
 stage('Clone Repo'){
     node('master'){
-      cleanWs()
+      // cleanWs()
       checkout([$class: 'GitSCM', branches: [[name: '*/$GIT_BRANCH']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/Sahithijalagam/java-k8s.git']]])
     }
   }
