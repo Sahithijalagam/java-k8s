@@ -18,7 +18,7 @@ stage('Clone Repo'){
 
   stage('Build Maven'){
     node('master'){
-      withMaven(maven: 'apache-maven3.6'){
+      withMaven {
        sh "mvn clean package"
       }
     }
