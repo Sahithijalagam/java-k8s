@@ -2,13 +2,15 @@
 properties([
 	parameters([
         string(defaultValue: "master", description: 'Which Git Branch to clone?', name: 'GIT_BRANCH'),
-        string(defaultValue: "java-k8s", description: 'Which Git Repo to clone?', name: 'GIT_APP_REPO')
+        string(defaultValue: "java-k8s", description: 'Which Git Repo to clone?', name: 'GIT_APP_REPO'),
+        string(defaultValue: "sahithij", description: 'Docker registry account name?', name: 'REGISTRY')
         // string(defaultValue: "ap-south-1", description: 'Docker ECR region', name: 'REGION'),
         // string(defaultValue: "043355153133", description: 'AWS Account Number?', name: 'ACCOUNT'),
         // string(defaultValue: "java-k8s", description: 'AWS ECR Repository where built docker images will be pushed.', name: 'ECR_REPO_NAME')
 	])
 ])
-
+registry = "${REGISTRY}/javak8s"
+registryCredential = "sahithij-dockerregistry"
 stage('Clone Repo'){
     node('master'){
       // cleanWs()
@@ -16,31 +18,57 @@ stage('Clone Repo'){
     }
   }
 
-  stage('Build Maven'){
-    node('master'){
-      withMaven(maven: 'maven-3'){
-       sh "mvn clean package"
-      }
-    }
-  }
+  // stage('Build Maven'){
+  //   node('master'){
+  //     withMaven(maven: 'maven-3'){
+  //      sh "mvn clean package"
+  //     }
+  //   }
+  // }
 
-//   stage('Build Docker Image') {
-//     node('master'){
-//       // sh "\$(aws ecr get-login --no-include-email --region ${REGION})"
-//       GIT_COMMIT_ID = sh (
-//         script: 'git log -1 --pretty=%H',
-//         returnStdout: true
-//       ).trim()
-//       TIMESTAMP = sh (
-//         script: 'date +%Y%m%d%H%M%S',
-//         returnStdout: true
-//       ).trim()
-//       echo "Git commit id: ${GIT_COMMIT_ID}"
-//       IMAGETAG="${GIT_COMMIT_ID}-${TIMESTAMP}"
-// 	  sh "docker build -t ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGETAG} ."
-//       // sh "docker push ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGETAG}"
-//     }
-//   }
+  // stage('Build Docker Image') {
+  //   node('master'){
+  //     // sh "\$(aws ecr get-login --no-include-email --region ${REGION})"
+  //     GIT_COMMIT_ID = sh (
+  //       script: 'git log -1 --pretty=%H',
+  //       returnStdout: true
+  //     ).trim()
+  //     TIMESTAMP = sh (
+  //       script: 'date +%Y%m%d%H%M%S',
+  //       returnStdout: true
+  //     ).trim()
+  //     echo "Git commit id: ${GIT_COMMIT_ID}"
+  //     IMAGETAG="${GIT_COMMIT_ID}-${TIMESTAMP}"
+	//   sh "docker build -t ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGETAG} ."
+  //     // sh "docker push ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGETAG}"
+  //   }
+  // }
+
+
+stage('Build Docker Image') {
+    GIT_COMMIT_ID = sh (
+        script: 'git log -1 --pretty=%H',
+        returnStdout: true
+      ).trim()
+      TIMESTAMP = sh (
+        script: 'date +%Y%m%d%H%M%S',
+        returnStdout: true
+      ).trim()
+      echo "Git commit id: ${GIT_COMMIT_ID}"
+      IMAGETAG="${GIT_COMMIT_ID}-${TIMESTAMP}"
+      finalImage = docker.build("${registry}:${IMAGETAG}",'.')
+  }
+ 
+ stage ('Push to Registry') {
+          docker.withRegistry('',registryCredential) {
+            finalImage.push()
+          }
+
+}
+
+  stage('Remove Pushed Image form Local') {
+    sh "docker rmi -f ${registry}:${IMAGETAG} "
+  }
 
 //   stage('Remove Pushed Image') {
 //     node('master'){
