@@ -11,12 +11,11 @@ properties([
 ])
 registry = "${REGISTRY}/javak8s"
 registryCredential = "sahithij-dockerregistry"
+node('master'){
 stage('Clone Repo'){
-    node('master'){
       // cleanWs()
       checkout([$class: 'GitSCM', branches: [[name: '*/$GIT_BRANCH']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/Sahithijalagam/java-k8s.git']]])
     }
-  }
 
   // stage('Build Maven'){
   //   node('master'){
@@ -69,7 +68,7 @@ stage('Build Docker Image') {
   stage('Remove Pushed Image form Local') {
     sh "docker rmi -f ${registry}:${IMAGETAG} "
   }
-
+}
 //   stage('Remove Pushed Image') {
 //     node('master'){
 //     // sh "docker rmi -f ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGETAG}"
